@@ -17,7 +17,7 @@
 package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
-import ru.mail.polis.shakirov_aa.DAOImpl;
+import ru.mail.polis.shakirov.DAOImpl;
 
 import java.io.File;
 import java.io.IOException;
