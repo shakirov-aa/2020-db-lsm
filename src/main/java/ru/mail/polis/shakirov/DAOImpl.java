@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.DAO;
 import ru.mail.polis.Record;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.NavigableMap;
@@ -15,22 +14,22 @@ public class DAOImpl implements DAO {
 
     @NotNull
     @Override
-    public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
+    public Iterator<Record> iterator(@NotNull final ByteBuffer from) {
         return db.tailMap(from).values().iterator();
     }
 
     @Override
-    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         db.put(key, Record.of(key, value));
     }
 
     @Override
-    public void remove(@NotNull final ByteBuffer key) throws IOException {
+    public void remove(@NotNull final ByteBuffer key) {
         db.remove(key);
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         // do nothing
     }
 }
