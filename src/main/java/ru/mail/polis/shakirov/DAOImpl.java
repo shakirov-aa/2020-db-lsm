@@ -16,7 +16,8 @@ public class DAOImpl implements DAO {
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) {
-        return Iterators.transform(db.tailMap(from).entrySet().iterator(), item -> Record.of(item.getKey(), item.getValue()));
+        return Iterators.transform(db.tailMap(from).entrySet().iterator(),
+                item -> Record.of(item.getKey(), item.getValue()));
     }
 
     @Override
