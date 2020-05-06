@@ -27,13 +27,12 @@ public class MemTable implements Table {
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final Value previous = map.put(key, new Value(System.currentTimeMillis(), value));
+        sizeInBytes += value.capacity();
         if (previous == null) {
-            sizeInBytes += key.remaining() + value.remaining();
-        } else if (previous.isTombstone()) {
-            sizeInBytes += value.remaining();
-        } else {
+            sizeInBytes += key.capacity() + Long.BYTES;
+        } else if (!previous.isTombstone()) {
             // sizeInBytes += difference between new data and old data
-            sizeInBytes += value.remaining() - previous.getData().remaining();
+            sizeInBytes -= previous.getData().capacity();
         }
     }
 
