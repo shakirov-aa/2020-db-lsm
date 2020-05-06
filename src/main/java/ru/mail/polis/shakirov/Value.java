@@ -9,6 +9,10 @@ public class Value implements Comparable<Value> {
     @NotNull
     private final ByteBuffer data;
 
+    /**
+     * Constructor
+     * Creates tombstone if data is null
+     */
     public Value(final long timestamp, @NotNull final ByteBuffer data) {
         assert timestamp > 0L;
         this.timestamp = timestamp;
@@ -33,8 +37,6 @@ public class Value implements Comparable<Value> {
     public int compareTo(@NotNull final Value o) {
         return -Long.compare(this.timestamp, o.timestamp);
     }
-
-
 
     public long getTimestamp() {
         return timestamp;

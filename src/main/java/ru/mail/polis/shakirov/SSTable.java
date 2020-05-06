@@ -10,10 +10,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
 public class SSTable implements Table {
-    private FileChannel fileChannel;
-    private int rows;
-    private long fileSize;
+    private final FileChannel fileChannel;
+    private final int rows;
+    private final long fileSize;
 
+    /**
+     * Creates SSTable from file.
+     */
     public SSTable(@NotNull final File file) throws IOException {
         this.fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
         this.fileSize = fileChannel.size();
@@ -22,8 +25,12 @@ public class SSTable implements Table {
         this.rows = buf.rewind().getInt();
     }
 
-    public static void serialize(File file, Iterator<Cell> cellIterator, int rows) throws IOException {
-        try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)) {
+    /**
+     * saves SSTable to file
+     */
+    public static void serialize(final File file, final Iterator<Cell> cellIterator, final int rows) throws IOException {
+        try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE_NEW)) {
             final ByteBuffer offsets = ByteBuffer.allocate(rows * Long.BYTES);
             while (cellIterator.hasNext()) {
                 offsets.putLong(fc.position()); // here we put position(offset) for row which we are going to write
@@ -37,10 +44,13 @@ public class SSTable implements Table {
                 fc.write(ByteBuffer.allocate(Integer.BYTES).putInt(key.remaining()).rewind()); // keyLength
                 fc.write(key.rewind()); // keyBytes
                 if (value.isTombstone()) {
-                    fc.write(ByteBuffer.allocate(Long.BYTES).putLong(-1 * value.getTimestamp()).rewind()); // ts is negative
+                    fc.write(ByteBuffer.allocate(Long.BYTES)
+                            .putLong(-1 * value.getTimestamp()).rewind()); // ts is negative
                 } else {
-                    fc.write(ByteBuffer.allocate(Long.BYTES).putLong(value.getTimestamp()).rewind()); // ts is positive
-                    fc.write(ByteBuffer.allocate(Integer.BYTES).putInt(value.getData().remaining()).rewind()); // valueLength
+                    fc.write(ByteBuffer.allocate(Long.BYTES)
+                            .putLong(value.getTimestamp()).rewind()); // ts is positive
+                    fc.write(ByteBuffer.allocate(Integer.BYTES)
+                            .putInt(value.getData().remaining()).rewind()); // valueLength
                     fc.write(value.getData().rewind()); // valueBytes
                 }
             }
@@ -140,12 +150,12 @@ public class SSTable implements Table {
     }
 
     @Override
-    public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         throw new UnsupportedOperationException("Immutable!");
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) {
+    public void remove(@NotNull final ByteBuffer key) {
         throw new UnsupportedOperationException("Immutable!");
     }
 
