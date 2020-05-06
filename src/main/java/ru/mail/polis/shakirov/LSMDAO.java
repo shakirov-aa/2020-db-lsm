@@ -1,0 +1,114 @@
+package ru.mail.polis.shakirov;
+
+import com.google.common.collect.Iterators;
+import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.DAO;
+import ru.mail.polis.Iters;
+import ru.mail.polis.Record;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.stream.Stream;
+
+public class LSMDAO implements DAO {
+    private final static String SUFFIX = ".dat";
+    private final static String TEMP = ".tmp";
+
+    @NotNull
+    private final File storage;
+    private final long flushThreshold;
+
+    // Data
+    private Table memTable;
+    private final NavigableMap<Integer, Table> ssTables;
+
+    // State
+    private int generation;
+
+    public LSMDAO(@NotNull final File storage, final long flushThreshold) throws IOException {
+        assert flushThreshold > 0L;
+        this.storage = storage;
+        this.flushThreshold = flushThreshold;
+        this.memTable = new MemTable();
+        this.ssTables = new TreeMap<>();
+        try(Stream<Path> files = Files.list(storage.toPath())) {
+            files.filter(path -> path.toString().endsWith(SUFFIX)).forEach(f -> {
+                try {
+                    // 3.dat
+                    final String name = f.getFileName().toString();
+                    final int generation = Integer.parseInt(name.substring(0, name.indexOf(SUFFIX)));
+                    this.generation = Math.max(this.generation, generation);
+                    ssTables.put(generation, new SSTable(f.toFile()));
+                } catch (Exception e) {
+                    // Log bad file
+                }
+            });
+        }
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
+        final List<Iterator<Cell>> iters = new ArrayList<>(ssTables.size() + 1);
+        iters.add(memTable.iterator(from));
+        for (final Table t : ssTables.descendingMap().values()) {
+            iters.add(t.iterator(from));
+        }
+        // Sorted duplicates and tombstones
+        final Iterator<Cell> merged = Iterators.mergeSorted(iters, Cell.COMPARATOR);
+        // One cell per key
+        final Iterator<Cell> fresh = Iters.collapseEquals(merged, Cell::getKey);
+        // No tombstones
+        final Iterator<Cell> alive = Iterators.filter(fresh, e -> !e.getValue().isTombstone());
+        return Iterators.transform(alive, e -> Record.of(e.getKey(), e.getValue().getData()));
+    }
+
+    @Override
+    public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
+        memTable.upsert(key.asReadOnlyBuffer(), value.asReadOnlyBuffer());
+        if (memTable.sizeInBytes() > flushThreshold) {
+            flush();
+        }
+    }
+
+    @Override
+    public void remove(@NotNull ByteBuffer key) throws IOException {
+        memTable.remove(key);
+        if (memTable.sizeInBytes() > flushThreshold) {
+            flush();
+        }
+    }
+
+    private void flush() throws IOException {
+        // Dump memTable
+        final File file = new File(storage, generation + TEMP);
+        SSTable.serialize(file, memTable.iterator(ByteBuffer.allocate(0)), memTable.size());
+        final File dst = new File(storage, generation + SUFFIX);
+        Files.move(file.toPath(), dst.toPath(), StandardCopyOption.ATOMIC_MOVE);
+
+        // Switch
+        memTable = new MemTable();
+        ssTables.put(generation, new SSTable(dst));
+        generation++;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (memTable.size() > 0) {
+            flush();
+        }
+
+        for (Table t : ssTables.values()) {
+            t.close();
+        }
+    }
+}
