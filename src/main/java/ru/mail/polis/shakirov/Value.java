@@ -10,7 +10,7 @@ public class Value implements Comparable<Value> {
     private final ByteBuffer data;
 
     /**
-     * Constructor
+     * Constructor.
      * Creates tombstone if data is null
      */
     public Value(final long timestamp, @NotNull final ByteBuffer data) {

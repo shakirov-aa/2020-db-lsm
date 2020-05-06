@@ -19,9 +19,9 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-public class LSMDAO implements DAO {
-    private final static String SUFFIX = ".dat";
-    private final static String TEMP = ".tmp";
+public class LsmDao implements DAO {
+    private static String SUFFIX = ".dat";
+    private static String TEMP = ".tmp";
 
     @NotNull
     private final File storage;
@@ -35,9 +35,9 @@ public class LSMDAO implements DAO {
     private int generation;
 
     /**
-     * Created LSMDAO from storage with limit = flushThreshold
+     * Created LsmDao from storage with limit = flushThreshold.
      */
-    public LSMDAO(@NotNull final File storage, final long flushThreshold) throws IOException {
+    public LsmDao(@NotNull final File storage, final long flushThreshold) throws IOException {
         assert flushThreshold > 0L;
         this.storage = storage;
         this.flushThreshold = flushThreshold;
@@ -51,8 +51,9 @@ public class LSMDAO implements DAO {
                     final int gen = Integer.parseInt(name.substring(0, name.indexOf(SUFFIX)));
                     generation = Math.max(generation, gen);
                     ssTables.put(gen, new SSTable(f.toFile()));
-                } catch (Exception e) {
+                } catch (IOException e) {
                     // Log bad file
+                    e.printStackTrace();
                 }
             });
         }

@@ -26,9 +26,10 @@ public class SSTable implements Table {
     }
 
     /**
-     * saves SSTable to file
+     * saves SSTable to file.
      */
-    public static void serialize(final File file, final Iterator<Cell> cellIterator, final int rows) throws IOException {
+    public static void serialize(final File file, final Iterator<Cell> cellIterator,
+                                 final int rows) throws IOException {
         try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE_NEW)) {
             final ByteBuffer offsets = ByteBuffer.allocate(rows * Long.BYTES);
@@ -62,7 +63,7 @@ public class SSTable implements Table {
     }
 
     private long getOffset(final int row) throws IOException {
-        ByteBuffer offset = ByteBuffer.allocate(Long.BYTES);
+        final ByteBuffer offset = ByteBuffer.allocate(Long.BYTES);
         fileChannel.read(offset, this.fileSize - Integer.BYTES - Long.BYTES * (rows - row));
         return offset.rewind().getLong();
     }
@@ -128,7 +129,7 @@ public class SSTable implements Table {
 
     @NotNull
     @Override
-    public Iterator<Cell> iterator(@NotNull ByteBuffer from) throws IOException {
+    public Iterator<Cell> iterator(@NotNull final ByteBuffer from) throws IOException {
         return new Iterator<>() {
             private int next = binarySearch(from);
 
