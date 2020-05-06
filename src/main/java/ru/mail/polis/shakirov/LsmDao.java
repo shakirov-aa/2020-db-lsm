@@ -58,6 +58,8 @@ public class LsmDao implements DAO {
                 } catch (IOException e) {
                     // Log bad file
                     log.info("IOException in 'new SSTable'");
+                } catch (NumberFormatException e) {
+                    log.info("Incorrect file name");
                 }
             });
         }
