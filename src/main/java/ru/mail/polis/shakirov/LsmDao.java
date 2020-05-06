@@ -2,6 +2,8 @@ package ru.mail.polis.shakirov;
 
 import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.mail.polis.DAO;
 import ru.mail.polis.Iters;
 import ru.mail.polis.Record;
@@ -20,6 +22,8 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 public class LsmDao implements DAO {
+    private static final Logger log = LoggerFactory.getLogger(LsmDao.class);
+
     private static String SUFFIX = ".dat";
     private static String TEMP = ".tmp";
 
@@ -53,7 +57,7 @@ public class LsmDao implements DAO {
                     ssTables.put(gen, new SSTable(f.toFile()));
                 } catch (IOException e) {
                     // Log bad file
-                    e.printStackTrace();
+                    log.info("IOException in 'new SSTable'");
                 }
             });
         }
