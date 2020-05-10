@@ -39,10 +39,10 @@ public class LsmDao implements DAO {
     private int generation;
 
     /**
-     * Creates LsmDao
+     * Creates LsmDao.
      * @param storage database file storage
      * @param flushThreshold maximum size in bytes, data will be written to a file if size in bytes > flushThreshold
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public LsmDao(@NotNull final File storage, final long flushThreshold) throws IOException {
         assert flushThreshold > 0L;

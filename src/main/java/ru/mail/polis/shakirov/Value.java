@@ -9,8 +9,8 @@ final class Value implements Comparable<Value> {
     @NotNull
     private final ByteBuffer data;
 
-
     /**
+     * Creates value from timestamp and ByteBuffer.
      * @param timestamp time of creation
      * @param data information contained
      */
