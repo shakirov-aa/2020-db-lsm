@@ -21,7 +21,7 @@ final class Value implements Comparable<Value> {
     }
 
     /**
-     * Creates tombstone (tombstone doesn't have data)
+     * Creates tombstone (tombstone doesn't have data).
      */
     static Value tombstone(final long time) {
         return new Value(time, null);
