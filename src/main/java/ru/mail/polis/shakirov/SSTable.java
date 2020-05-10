@@ -9,7 +9,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
-public class SSTable implements Table {
+final class SSTable implements Table {
     private final FileChannel fileChannel;
     private final int rows;
     private final long fileSize;

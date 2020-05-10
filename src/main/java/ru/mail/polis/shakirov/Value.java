@@ -4,14 +4,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public class Value implements Comparable<Value> {
+final class Value implements Comparable<Value> {
     private final long timestamp;
     @NotNull
     private final ByteBuffer data;
 
+
     /**
-     * Constructor.
-     * Creates tombstone if data is null
+     * @param timestamp time of creation
+     * @param data information contained
      */
     public Value(final long timestamp, @NotNull final ByteBuffer data) {
         assert timestamp > 0L;
@@ -19,6 +20,9 @@ public class Value implements Comparable<Value> {
         this.data = data;
     }
 
+    /**
+     * Creates tombstone (tombstone doesn't have data)
+     */
     static Value tombstone(final long time) {
         return new Value(time, null);
     }

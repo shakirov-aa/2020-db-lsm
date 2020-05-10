@@ -39,7 +39,10 @@ public class LsmDao implements DAO {
     private int generation;
 
     /**
-     * Created LsmDao from storage with limit = flushThreshold.
+     * Creates LsmDao
+     * @param storage database file storage
+     * @param flushThreshold maximum size in bytes, data will be written to a file if size in bytes > flushThreshold
+     * @throws IOException
      */
     public LsmDao(@NotNull final File storage, final long flushThreshold) throws IOException {
         assert flushThreshold > 0L;
@@ -57,9 +60,9 @@ public class LsmDao implements DAO {
                     ssTables.put(gen, new SSTable(f.toFile()));
                 } catch (IOException e) {
                     // Log bad file
-                    log.info("IOException in 'new SSTable'");
+                    log.warn("Exception in 'new SSTable' ", e);
                 } catch (NumberFormatException e) {
-                    log.info("Incorrect file name");
+                    log.info("Incorrect file name: " + f.getFileName().toString());
                 }
             });
         }
@@ -92,7 +95,7 @@ public class LsmDao implements DAO {
 
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
-        memTable.remove(key);
+        memTable.remove(key.asReadOnlyBuffer());
         if (memTable.sizeInBytes() > flushThreshold) {
             flush();
         }
