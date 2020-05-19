@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 final class SSTable implements Table {
     private final FileChannel fileChannel;
@@ -28,13 +30,13 @@ final class SSTable implements Table {
     /**
      * saves SSTable to file.
      */
-    public static void serialize(final File file, final Iterator<Cell> cellIterator,
-                                 final int rows) throws IOException {
+    public static void serialize(final File file, final Iterator<Cell> cellIterator) throws IOException {
         try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE_NEW)) {
-            final ByteBuffer offsets = ByteBuffer.allocate(rows * Long.BYTES);
+            // final ByteBuffer offsets = ByteBuffer.allocate(rows * Long.BYTES);
+            List<Long> offsets = new ArrayList<>();
             while (cellIterator.hasNext()) {
-                offsets.putLong(fc.position()); // here we put position(offset) for row which we are going to write
+                offsets.add(fc.position()); // here we put position(offset) for row which we are going to write
 
                 final Cell cell = cellIterator.next();
                 final ByteBuffer key = cell.getKey();
@@ -56,9 +58,11 @@ final class SSTable implements Table {
                 }
             }
 
-            fc.write(offsets.rewind());
+            for (final Long offset : offsets) {
+                fc.write(ByteBuffer.allocate(Long.BYTES).putLong(offset).rewind());
+            }
             // at the end of the file we write the number of rows
-            fc.write(ByteBuffer.allocate(Integer.BYTES).putInt(rows).rewind());
+            fc.write(ByteBuffer.allocate(Integer.BYTES).putInt(offsets.size()).rewind());
         }
     }
 

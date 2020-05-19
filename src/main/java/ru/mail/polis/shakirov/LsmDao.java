@@ -104,7 +104,7 @@ public class LsmDao implements DAO {
     private void flush() throws IOException {
         // Dump memTable
         final File file = new File(storage, generation + TEMP);
-        SSTable.serialize(file, memTable.iterator(ByteBuffer.allocate(0)), memTable.size());
+        SSTable.serialize(file, memTable.iterator(ByteBuffer.allocate(0)));
         final File dst = new File(storage, generation + SUFFIX);
         Files.move(file.toPath(), dst.toPath(), StandardCopyOption.ATOMIC_MOVE);
 
