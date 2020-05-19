@@ -113,8 +113,6 @@ final class SSTable implements Table {
     }
 
     private int binarySearch(final ByteBuffer from) throws IOException {
-        assert rows > 0;
-
         int left = 0;
         int right = rows - 1;
         while (left <= right) {

@@ -11,6 +11,7 @@ import ru.mail.polis.Record;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -66,6 +67,7 @@ public class LsmDao implements DAO {
                 }
             });
         }
+        generation++;
     }
 
     @NotNull
@@ -123,5 +125,45 @@ public class LsmDao implements DAO {
         for (final Table t : ssTables.values()) {
             t.close();
         }
+    }
+
+    private Iterator<Cell> aliveCells(@NotNull final ByteBuffer from) throws IOException {
+        final List<Iterator<Cell>> iterators = new ArrayList<>();
+        for (final Table ssTable : this.ssTables.values()) {
+            iterators.add(ssTable.iterator(from));
+        }
+
+        iterators.add(memTable.iterator(from));
+        final Iterator<Cell> cellIterator = Iters.collapseEquals(
+                Iterators.mergeSorted(iterators, Cell.COMPARATOR),
+                Cell::getKey
+        );
+
+        return Iterators.filter(
+                cellIterator, cell -> {
+                    assert cell != null;
+                    return !cell.getValue().isTombstone();
+                }
+        );
+    }
+
+    @Override
+    public void compact() throws IOException {
+        final File tmp = new File(storage, "compact" + TEMP);
+        Iterator<Cell> cellIterator = aliveCells(ByteBuffer.allocate(0));
+        SSTable.serialize(tmp, cellIterator);
+
+        for (int i = 1; i < generation; i++) {
+            Files.delete(Path.of(storage.toString() + "/" + i + SUFFIX));
+        }
+
+        generation = 1;
+        final File dst = new File(storage, generation + SUFFIX);
+        Files.move(tmp.toPath(), dst.toPath(), StandardCopyOption.ATOMIC_MOVE);
+
+        ssTables.clear();
+        ssTables.put(generation, new SSTable(dst));
+        memTable = new MemTable();
+        generation++;
     }
 }
