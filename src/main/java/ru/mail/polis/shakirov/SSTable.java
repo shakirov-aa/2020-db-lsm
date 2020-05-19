@@ -33,8 +33,7 @@ final class SSTable implements Table {
     public static void serialize(final File file, final Iterator<Cell> cellIterator) throws IOException {
         try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE_NEW)) {
-            // final ByteBuffer offsets = ByteBuffer.allocate(rows * Long.BYTES);
-            List<Long> offsets = new ArrayList<>();
+            final List<Long> offsets = new ArrayList<>();
             while (cellIterator.hasNext()) {
                 offsets.add(fc.position()); // here we put position(offset) for row which we are going to write
 

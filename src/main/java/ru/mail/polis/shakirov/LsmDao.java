@@ -11,7 +11,6 @@ import ru.mail.polis.Record;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -150,8 +149,7 @@ public class LsmDao implements DAO {
     @Override
     public void compact() throws IOException {
         final File tmp = new File(storage, "compact" + TEMP);
-        Iterator<Cell> cellIterator = aliveCells(ByteBuffer.allocate(0));
-        SSTable.serialize(tmp, cellIterator);
+        SSTable.serialize(tmp, aliveCells(ByteBuffer.allocate(0)));
 
         for (int i = 1; i < generation; i++) {
             Files.delete(Path.of(storage.toString() + "/" + i + SUFFIX));
